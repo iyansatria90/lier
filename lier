@@ -1,0 +1,700 @@
+#!/bin/bash
+
+G='\e[01;32m'    # GREEN
+R='\e[01;31m'    # RED
+Y='\e[01;33m'    # YELLOW
+B='\e[01;34m'    # BLUE
+V='\e[01;35m'    # VIOLET
+Bl='\e[01;30m'   # BLACK
+C='\e[01;36m'    # CYAN
+W='\e[01;37m'    # WHITE
+N='\e[00;37;40m' # NEUTRAL
+version="1.9"
+release_date="12 Juni 2023"
+tampilan="sederhana"
+mainfldr=$(dirname "$0")
+today=$(date +"%d-%b-%Y")
+srcfldr=nsstore
+tujuan=$mainfldr/$srcfldr/$today
+banner() {
+  echo ""
+  echo ""
+  echo ""
+  echo "${Y}                     TEBETABIS TOOL${W}"
+  echo ""
+  echo "${R}RESTORE WITHOUT TB ${W}"
+  echo "${G}VERSION:$version ${W}"
+  echo ""
+  echo ""
+  echo "${Y}Created: ${W}NS STORE${G}"
+  echo ""
+  
+  underline_text "#########################################"
+  echo ""
+  
+ 
+}
+
+
+underline_text() {
+  local text="$1"
+  local underline_char="${2:--}"
+  local num_chars=${#text}
+
+  printf "${G}%s\n" "$text"
+  printf "${G}%*s\n" "$num_chars" | tr ' ' "$underline_char"
+}
+
+restore() {
+clear
+banner
+  rm -r /storage/emulated/0/Android/data/* 2>/dev/null
+  rm -r /data/data/com.lazada.android/* 2>/dev/null
+  am force-stop com.lazada.android 2>/dev/null
+  pm clear com.lazada.android 2>/dev/null
+  sumber="/data/local/data/data/com.lazada.android" 2>/dev/null
+  target="/data/data/com.lazada.android" 2>/dev/null
+
+  cp -r "$sumber"/* "$target"
+
+  chown -R $(ls -ld $target | cut -d ' ' -f 3):$(ls -ld $tujuan | cut -d ' ' -f 4) $target
+
+  rm -rf "$sumber" 2>/dev/null
+  clear
+  am start -n com.lazada.android/com.lazada.activities.EnterActivity
+}
+
+extract() {
+  clear
+  while true; do
+    clear
+    
+    
+fdrsrc="$tujuan/"
+    bckpfolder="sudahdicek"
+    sgmanager=/data/data/com.lazada.android/files/SGMANAGER_DATA2
+    fdrout="/data/local/"
+    banner
+    mkdir -p "$fdrout"
+    underline_text "                    Path dir: $(basename "$tujuan")"
+    echo "${G}Isi folder:"
+    underline_text "no. | jam | status | informasi"
+    files=("$tujuan"/*.tar.gz)
+    for i in "${!files[@]}"; do
+      properties_file="${files[$i]%.tar.gz}.properties"
+      if [ -f "$properties_file" ]; then
+        keterangan=$(grep -o 'keterangan=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan2=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan3=$(grep -o 'infoakun=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan4=$(grep -o 'kecamatan=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan5=$(grep -o 'keterangan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan6=$(grep -o 'kecamatan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan7=$(grep -o 'infoakun_ext=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan8=$(grep -o 'sys_ro.product.model=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan9=$(grep -o 'sys_ro.build.description=.*' "$properties_file" | cut -d'=' -f2-)
+        waktu=$(grep -oE '[0-9]{2}:[0-9]{2}' "$properties_file" | awk '{print $1}')
+
+        case $keterangan3 in
+          aman)
+            status="${G}$keterangan3";;
+          cc)
+            status="${R}$keterangan3${G}";;
+          cv)
+            status="${W}$keterangan3${G}";;
+          *)
+            status="${W}----${G}";;
+        esac
+       findtarget=$(find "$tujuan" -type f -name '*.tar.gz'  | awk -F'-' '{ print $0 }' | sort | uniq)
+        
+
+
+      filetarget=$(basename "$findtarget" .tar.gz)
+    app_name=$(echo "$filetarget" | cut -d'-' -f1)
+
+    if [ "$tampilan" == "sederhana" ]; then
+  echo "${G}$i. | ${C}$waktu ${G}| $status |${Y}$keterangan ~ ${Y}$keterangan4 ${G} $keterangan2"
+else
+  echo "${G}$i. | ${C}$waktu ${G}| ${G}$keterangan ~ ${G}$keterangan4 "
+  
+  echo "    ${G}-${Y}Restore: ${R}$keterangan2"
+  echo "   ${G} -${Y}Status: ${R}$keterangan3"
+  echo "   ${G} -${Y}CO ulang: ${R}$keterangan7"
+  echo "  ${G}  -${Y}Toko*: ${R}$keterangan5"
+  echo "  ${G}  -${Y}Kecamatan*: ${R}$keterangan6"
+  echo "    ${G}-${Y}model: ${R}$keterangan8"
+  echo "  ${G}  -${Y}display*: ${R}$keterangan9"
+  
+fi
+      else
+        echo "${G}$i. File tanpa info"
+      fi
+    done
+   echo "" 
+echo "                   app:${R}$app_name"
+    echo "${G}#########################################"
+    if [ "$tampilan" == "sederhana" ]; then
+  echo "${R}s) ${Y}tampilkan detail"
+else
+  echo "${R}s) ${Y}sembunyikan detail"
+fi
+    echo ""
+    echo "${G}Opsi:${W}"
+    
+    echo "${R}a) ${G}Hapus semua file CV"
+    echo "${R}b) ${G}Hapus file CC"
+    echo "${R}c) ${G}Reset Ket."
+    echo "${R}d) ${G}Backup akun CV"
+    echo "${R}e) ${G}Isi keterangan masal"
+    echo ""
+    echo "${R}n) ${G}info script"
+    echo "${R}z) ${G}pilih folder lain"
+    echo ""
+    echo "${G}Masukkan nomor file yang \nakan diekstrak / pilih Opsi \n(q untuk keluar):"
+    read selected_number
+
+    case $selected_number in
+     s)
+    if [ "$tampilan" == "sederhana" ]; then
+      tampilan="lengkap"
+    else
+      tampilan="sederhana"
+    fi
+    ;;
+      a)
+        delete_files_with_cv;;
+      b)
+        delete_files_with_cc;;
+      c)
+        reset_keterangan;;
+      d)
+        backup_akun_cv;;
+      e)
+        isi_keterangan_masal;;
+      n)
+        about;;
+      z)
+        list_folder;;
+    esac
+
+    if [ -z "$selected_number" ]; then
+      echo "Pilihan tidak boleh kosong. Silakan coba lagi."
+      continue
+    fi
+
+    if [ "$selected_number" == "q" ]; then
+      break
+    fi
+
+    if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
+      echo "Pilihan harus berupa angka. Silakan coba lagi."
+      continue
+    fi
+
+    if [ "$selected_number" -lt 0 ] || [ "$selected_number" -ge "${#files[@]}" ]; then
+      echo "Nomor file tidak valid. Silakan coba lagi."
+      continue
+    fi
+
+    if [ "$selected_number" -ge 0 ] && [ "$selected_number" -lt "${#files[@]}" ]; then
+      selected_file="${files[$selected_number]}"
+
+      echo "${G}Mengekstrak $selected_file..."
+      tar -xf "$selected_file" -C "$fdrout" 2>/dev/null
+      restore
+
+      properties_file="${selected_file%.tar.gz}.properties"
+      if [ -f "$properties_file" ]; then
+        line=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
+
+        if [ -n "$line" ]; then
+          sed -i "s/$line/√/g" "$properties_file"
+        else
+          echo "infoco=√" >>"$properties_file"
+        fi
+      else
+        echo "infoco=√" >"$properties_file"
+      fi
+
+      echo "${G}Ekstraksi selesai."
+    else
+      echo "${G}Nomor file tidak valid. Tekan Enter untuk melanjutkan."
+      read
+    fi
+
+    properties_file="${selected_file%.tar.gz}.properties"
+    if [ -f "$properties_file" ]; then
+      keterangan=$(grep -o 'keterangan=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan2=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan3=$(grep -o 'infoakun=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan4=$(grep -o 'kecamatan=.*' "$properties_file" | cut -d'=' -f2-)
+
+      if [ -z "$keterangan" ]; then
+        clear
+        banner
+        echo "Info 'toko' tidak ditemukan."
+        echo "Apakah Anda ingin menambahkan info 'Toko'? (y/n)"
+        read keterangan_choice
+
+        if [ "$keterangan_choice" == "y" ]; then
+          clear
+          banner
+          echo "Masukkan Nama Toko:"
+          read keterangan_input
+          sed -i '/keterangan=/d' "$properties_file"
+          echo "keterangan=$keterangan_input" >>"$properties_file"
+        fi
+      fi
+
+      if [ -z "$keterangan4" ]; then
+        clear
+        banner
+        echo "Info 'kecamatan' tidak ditemukan."
+        echo "Apakah Anda ingin menambahkan info 'kecamatan'? (y/n)"
+        read kecamatan_choice
+
+        if [ "$kecamatan_choice" == "y" ]; then
+          clear
+          banner
+          echo "Masukkan kecamatan:"
+          read kecamatan_input
+          sed -i '/kecamatan=/d' "$properties_file"
+          echo "kecamatan=$kecamatan_input" >>"$properties_file"
+        fi
+      fi
+
+      if grep -q 'infoakun=' "$properties_file"; then
+        validasicc=$(grep -o 'infoakun=.*' "$properties_file" | cut -d'=' -f2-)
+
+        if [[ "$validasicc" == "cc" ]]; then
+          clear
+          banner
+          echo "Status akun Anda: ${R}$validasicc"
+          echo "${G}Apakah Anda sudah CO ulang dan ingin mengubah status? (y/n)"
+          read edit_choice
+
+          if [ "$edit_choice" == "y" ]; then
+            clear
+            banner
+            sed -i '/infoakun_ext=/d' "$properties_file"
+            echo "infoakun_ext=*" >>"$properties_file"
+
+            echo "Masukkan Nama Toko:"
+            read toko_input
+            sed -i '/keterangan_ext=/d' "$properties_file"
+            echo "keterangan_ext=$toko_input" >>"$properties_file"
+            echo "Masukkan kecamatan:"
+            read kecamatanext
+            sed -i '/kecamatan_ext=/d' "$properties_file"
+            echo "kecamatan_ext=$kecamatanext" >>"$properties_file"
+          fi
+        else
+          echo "Restore selesai"
+        fi
+      else
+        clear
+        banner
+        echo "Akun Anda masih fresh"
+
+        echo "Masukkan nomor pilihan status:"
+        echo "1. cc"
+        echo "2. cv"
+        echo "3. aman"
+        echo "4. Tidak mengisi"
+        read keterangan_choice
+
+        case $keterangan_choice in
+        1) echo "infoakun=cc" >>"$properties_file" ;;
+        2) echo "infoakun=cv" >>"$properties_file" ;;
+        3) echo "infoakun=aman" >>"$properties_file" ;;
+        4) ;;
+        *) echo "Pilihan tidak valid" ;;
+        esac
+      fi
+    fi
+
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+  done
+}
+
+
+
+
+menu() {
+  echo ""
+  echo "${Y}Menu Tambahan:${W}"
+  echo "${G}a) Hapus semua file dengan keterangan CV"
+  echo "${G}b) Hapus file dengan keterangan CC"
+  echo ""
+  echo "${G}Pilih menu tambahan (q untuk keluar):"
+  read option
+
+  case $option in
+    a) delete_files_with_cv ;;
+    b) delete_files_with_cc ;;
+    c) reset_keterangan ;;
+    d) backup_akun_cv ;;
+    e) isi_keterangan_masal ;;
+
+    q) exit ;;
+    *) echo "Pilihan tidak valid. Silakan coba lagi." ;;
+  esac
+}
+
+backup_akun_cv() {
+
+  
+  backup_folder="$tujuan/backup_akun_cv"
+  mkdir -p "$backup_folder"
+
+  files_with_cv=($(ls "$tujuan" | grep '\.properties$'))
+  if [ ${#files_with_cv[@]} -eq 0 ]; then
+    echo "Tidak ada file dengan keterangan CV."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  for file in "${files_with_cv[@]}"; do
+    file_path="$tujuan/$file"
+    file_without_ext="${file%.properties}"
+    tar_file="$tujuan/$file_without_ext.tar.gz"
+    if [ -f "$tar_file" ]; then
+      mv "$tar_file" "$backup_folder/$file_without_ext.tar.gz"
+    fi
+    if [ -f "$file_path" ]; then
+      mv "$file_path" "$backup_folder/$file"
+    fi
+  done
+
+  echo "Pemindahan file ke folder backup selesai."
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  banner
+  extract
+}
+
+delete_files_with_cv() {
+  clear
+  banner
+  echo "${G}Menghapus semua file dengan keterangan CV..."
+
+  files_with_cv=($(grep -l 'infoakun=cv' "$tujuan"/*.properties))
+  if [ ${#files_with_cv[@]} -eq 0 ]; then
+    echo "Tidak ada file dengan keterangan CV."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  for file in "${files_with_cv[@]}"; do
+    file_without_ext="${file%.properties}"
+      tar_file="$file_without_ext.tar.gz"
+      if [ -f "$tar_file" ]; then
+        rm "$tar_file"
+      fi
+      if [ -f "$file" ]; then
+        rm "$file"
+      fi
+  done
+
+  echo "Penghapusan selesai."
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  banner
+  extract
+}
+
+
+delete_files_with_cc() {
+  clear
+  banner
+  echo "${G}Menghapus file dengan keterangan CC..."
+
+  files_with_cc=($(grep -l 'infoakun=cc' "$tujuan"/*.properties))
+  if [ ${#files_with_cc[@]} -eq 0 ]; then
+    echo "Tidak ada file dengan keterangan CC."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  for i in "${!files_with_cc[@]}"; do
+    properties_file="${files_with_cc[$i]}"
+    keterangan=$(grep -o 'keterangan=.*' "$properties_file" | cut -d'=' -f2-)
+    waktu=$(grep -oE '[0-9]{2}:[0-9]{2}' "$properties_file" | awk '{print $1}')
+    echo "${G}$i. ${R}$waktu - ${Y}$keterangan"
+  done
+  
+  echo "${G}Pilih nomor file yang akan dihapus \n(q untuk keluar, ${Y}'a' ${G}untuk hapus semua):"
+  read selected_number
+
+  if [ "$selected_number" == "q" ]; then
+    banner
+    extract
+  fi
+
+  if [ "$selected_number" == "a" ]; then
+    for file in "${files_with_cc[@]}"; do
+      file_without_ext="${file%.properties}"
+      tar_file="$file_without_ext.tar.gz"
+      if [ -f "$tar_file" ]; then
+        rm "$tar_file"
+      fi
+      if [ -f "$file" ]; then
+        rm "$file"
+      fi
+    done
+    echo "Penghapusan semua file selesai."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
+    echo "Pilihan harus berupa angka atau 'a'. Silakan coba lagi."
+    delete_files_with_cc
+  fi
+
+  if [ "$selected_number" -lt 0 ] || [ "$selected_number" -ge "${#files_with_cc[@]}" ]; then
+    echo "Nomor file tidak valid. Silakan coba lagi."
+    delete_files_with_cc
+  fi
+
+  selected_file="${files_with_cc[$selected_number]}"
+  file_without_ext="${selected_file%.properties}"
+  tar_file="$file_without_ext.tar.gz"
+
+  if [ -f "$tar_file" ]; then
+    rm "$tar_file"
+  fi
+  if [ -f "$selected_file" ]; then
+    rm "$selected_file"
+  fi
+
+  echo "Penghapusan selesai."
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  banner
+  extract
+}
+
+
+
+
+reset_keterangan() {
+  clear
+  banner
+  echo "${G}Reset keterangan..."
+
+  echo "${G}Isi folder:"
+  files=($(ls "$tujuan" | grep '\.properties$'))
+  for i in "${!files[@]}"; do
+    properties_file="${files[$i]}"
+    keterangan=$(grep -o 'keterangan=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan2=$(grep -o 'infoco=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan3=$(grep -o 'infoakun=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan4=$(grep -o 'kecamatan=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan5=$(grep -o 'keterangan_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan6=$(grep -o 'kecamatan_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan7=$(grep -o 'infoakun_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    waktu=$(grep -oE '[0-9]{2}:[0-9]{2}' "$tujuan/$properties_file" | awk '{print $1}')
+
+    echo "${G}$i. | ${R}$keterangan3${G} | ${Y}$keterangan ${G}- ${Y}$keterangan4  ${R}$keterangan2 "
+  done
+  echo "${G}Pilih nomor file yang akan direset keterangannya \n(q untuk keluar,  ${Y}'a'  ${G}untuk reset semua):"
+  read selected_number
+
+  if [ "$selected_number" == "q" ]; then
+    banner
+    extract
+  fi
+
+  if [ "$selected_number" == "a" ]; then
+    for file in "${files[@]}"; do
+      sed -i '/infoakun=/d' "$tujuan/$file"
+      sed -i '/infoakun_ext=/d' "$tujuan/$file"
+      sed -i '/keterangan_ext=/d' "$tujuan/$file"
+      sed -i '/kecamatan_ext=/d' "$tujuan/$file"
+    done
+    echo "Reset semua file selesai."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
+    echo "Pilihan harus berupa angka atau 'a'. Silakan coba lagi."
+    reset_keterangan
+  fi
+
+  if [ "$selected_number" -lt 0 ] || [ "$selected_number" -ge "${#files[@]}" ]; then
+    echo "Nomor file tidak valid. Silakan coba lagi."
+    reset_keterangan
+  fi
+
+  selected_file="${files[$selected_number]}"
+
+  sed -i '/infoakun=/d' "$tujuan/$selected_file"
+  sed -i '/infoakun_ext=/d' "$tujuan/$selected_file"
+  sed -i '/keterangan_ext=/d' "$tujuan/$selected_file"
+  sed -i '/kecamatan_ext=/d' "$tujuan/$selected_file"
+
+  echo "Reset keterangan selesai."
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  banner
+  extract
+}
+isi_keterangan_masal() {
+  clear
+  banner
+  echo "${G}Isi keterangan masal..."
+echo "${G}Isi folder:"
+  files=($(ls "$tujuan" | grep '\.properties$'))
+  for i in "${!files[@]}"; do
+    properties_file="${files[$i]}"
+    keterangan=$(grep -o 'keterangan=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan2=$(grep -o 'infoco=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan3=$(grep -o 'infoakun=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan4=$(grep -o 'kecamatan=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan5=$(grep -o 'keterangan_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan6=$(grep -o 'kecamatan_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    keterangan7=$(grep -o 'infoakun_ext=.*' "$tujuan/$properties_file" | cut -d'=' -f2-)
+    waktu=$(grep -oE '[0-9]{2}:[0-9]{2}' "$tujuan/$properties_file" | awk '{print $1}')
+
+    echo "${G}$i. | ${R}$keterangan3${G} | ${Y}$keterangan ${G}- ${Y}$keterangan4  ${R}$keterangan2 "
+  done
+  echo "${G}Pilih nomor file yang akan dirubah keterangannya \n(q untuk keluar,  ${Y}'a'  ${G}untuk ubah semua):"
+  read selected_number
+
+  if [ "$selected_number" == "q" ]; then
+    banner
+    extract
+  fi
+
+  if [ "$selected_number" == "a" ]; then
+    echo "${G}Masukkan keterangan yang akan diisi untuk infoakun :"
+  read nilai_infoakun
+
+  for file in "${files[@]}"; do
+    properties_file="$tujuan/$file"
+    if [ -f "$properties_file" ]; then
+      if grep -q "infoakun=" "$properties_file"; then
+        echo "File $file sudah memiliki nilai infoakun. Melewati file ini."
+      else
+        echo "Menambahkan nilai infoakun untuk file $file..."
+        echo "infoakun=$nilai_infoakun" >> "$properties_file"
+        echo "Nilai infoakun berhasil ditambahkan dengan '$nilai_infoakun' untuk file $file."
+      fi
+    else
+      echo "File properties tidak ditemukan untuk file $file. Membuat file properties baru..."
+      echo "infoakun=$nilai_infoakun" > "$properties_file"
+      echo "File properties baru berhasil dibuat dengan nilai infoakun '$nilai_infoakun' untuk file $file."
+    fi
+  done
+    echo "ubah keterangan semua file selesai."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
+
+  if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
+    echo "Pilihan harus berupa angka atau 'a'. Silakan coba lagi."
+    reset_keterangan
+  fi
+
+  if [ "$selected_number" -lt 0 ] || [ "$selected_number" -ge "${#files[@]}" ]; then
+    echo "Nomor file tidak valid. Silakan coba lagi."
+    reset_keterangan
+  fi
+
+  selected_file="${files[$selected_number]}"
+echo "${G}Masukkan keterangan yang akan diisi untuk infoakun :"
+  read nilai_infoakun
+  sed -i '/infoakun=/d' "$tujuan/$selected_file"
+  echo "infoakun=$nilai_infoakun" >> "$tujuan/$selected_file"
+      echo "File properties baru berhasil dibuat dengan nilai infoakun '$nilai_infoakun' untuk file $selected_file."
+  
+  
+  echo "Isi keterangan selesai."
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  banner
+  extract
+}
+list_folder() {
+  clear
+  banner
+  echo "${G}Daftar subfolder dalam direktori $tujuan:"
+  subfolders=($(ls -dt "$mainfldr/$srcfldr"/*/))
+  for i in "${!subfolders[@]}"; do
+    subfolder="${subfolders[$i]}"
+    subfolder_name=$(basename "$subfolder")
+    echo "${G}$i. ${R}$subfolder_name"
+  done
+
+  echo "${G}Pilih nomor subfolder (q untuk keluar):"
+  read selected_number
+
+  if [ "$selected_number" == "q" ]; then
+    banner
+    extract
+  fi
+
+  if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
+    echo "Pilihan harus berupa angka. Silakan coba lagi."
+    list_subfolders
+  fi
+
+  if [ "$selected_number" -lt 0 ] || [ "$selected_number" -ge "${#subfolders[@]}" ]; then
+    echo "Nomor subfolder tidak valid. Silakan coba lagi."
+    list_subfolders
+  fi
+
+  selected_subfolder="${subfolders[$selected_number]}"
+  selected_subfolder_name=$(basename "$selected_subfolder")
+
+  # Menetapkan subfolder yang dipilih sebagai tujuan baru
+  tujuan="$selected_subfolder"
+  echo "Anda telah memilih subfolder: $selected_subfolder_name"
+  # Lakukan tindakan yang diinginkan terhadap subfolder yang dipilih
+
+  echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  clear
+  banner
+  extract
+}
+
+about() {
+  clear
+  banner
+  update_info="Versi ini mencakup beberapa perbaikan bug\n dan peningkatan kinerja.\nKami juga menambahkan fitur \nbaru untuk memudahkan pengguna \ndalam mengelola data."
+
+  echo "========================================"
+  echo "            ABOUT SCRIPT                "
+  echo "========================================"
+  echo "${G}Script Name : CEK & RESTORE BASH"
+  echo "${G}Pengembang : ${W}NS STORE"
+  echo "${G}Telegram : ${W}t.me/altf4now"
+  echo "${G}Version : ${R}$version"
+  echo "${G}Release Date : ${R}$release_date"
+  echo "${G}Update Information : ${R}\n$update_info"
+  echo "${G}========================================"
+echo "${G}Tekan Enter untuk melanjutkan."
+  read
+  clear
+  banner
+  extract
+}
+clear
+banner
+extract
