@@ -695,6 +695,33 @@ echo "${G}Tekan Enter untuk melanjutkan."
   banner
   extract
 }
+check_script_update() {
+    # Step 1: Get the latest version from the web
+    local latest_version=$(curl -s 'https://raw.githubusercontent.com/iyansatria90/lier/versi/versi')
+
+    # Step 2: Compare the version
+    local current_version="$version"  # Ganti dengan versi skrip Anda saat ini
+    
+    if [[ "$latest_version" != "$current_version" ]]; then
+        echo "There is an update available. Downloading the latest script..."
+        
+        # Step 3: Download the updated script
+         curl -o script.sh https://raw.githubusercontent.com/iyansatria90/lier/main/lier
+
+        
+        # Step 4: Make the script executable
+        chmod +x script.sh
+        
+        echo "Update complete. Running the latest script..."
+        ./script.sh
+    else
+        echo "The script is up to date."
+    fi
+}
+
+# Call the function to check for script update
+check_script_update
+sleep 2
 clear
 banner
 extract
