@@ -706,14 +706,14 @@ check_script_update() {
         echo "There is an update available. Downloading the latest script..."
         
         # Step 3: Download the updated script
-         curl -o script.sh https://raw.githubusercontent.com/iyansatria90/lier/main/lier
+         curl -o cekakun.sh https://raw.githubusercontent.com/iyansatria90/lier/main/lier
 
         
         # Step 4: Make the script executable
-        chmod +x script.sh
+        chmod +x cekakun.sh
         
         echo "Update complete. Running the latest script..."
-        ./script.sh
+        ./cekakun.sh
     else
         echo "The script is up to date."
     fi
