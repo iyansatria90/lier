@@ -9,13 +9,20 @@ Bl='\e[01;30m'   # BLACK
 C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # NEUTRAL
-version="1.9.1"
-release_date="16 Juni 2023"
+version="1.9.2"
+release_date="4 Juli 2023"
 tampilan="sederhana"
 mainfldr=$(dirname "$0")
 today=$(date +"%d-%b-%Y")
 srcfldr=nsstore
-tujuan=$mainfldr/$srcfldr/$today
+if [ ! -f "tujuan.txt" ] || [ ! -s "tujuan.txt" ]; then
+  echo "$mainfldr/$srcfldr/$today" > "tujuan.txt"
+fi
+if [ -f "tujuan.txt" ]; then
+  tujuan=$(cat "tujuan.txt")
+fi
+
+#tujuan=
 banner() {
   echo ""
   echo ""
@@ -61,7 +68,14 @@ banner
 
   rm -rf "$sumber" 2>/dev/null
   clear
-  am start -n com.lazada.android/com.lazada.activities.EnterActivity
+  banner
+  echo "Apakah Anda akan membuka aplikasi? (Y/n)"
+read -r open_choice
+
+if [[ "$open_choice" == "Y" || "$open_choice" == "y" ]]; then
+    am start -n com.lazada.android/com.lazada.activities.EnterActivity
+fi
+
 }
 
 extract() {
@@ -299,23 +313,24 @@ fi
         echo "1. cc"
         echo "2. cv"
         echo "3. aman"
-        echo "4. Tidak mengisi"
+        echo "enter untuk mengabaikan"
         read keterangan_choice
 
         case $keterangan_choice in
         1) echo "infoakun=cc" >>"$properties_file" ;;
         2) echo "infoakun=cv" >>"$properties_file" ;;
         3) echo "infoakun=aman" >>"$properties_file" ;;
-        4) ;;
+        "") ;;
         *) echo "Pilihan tidak valid" ;;
         esac
       fi
     fi
 
-    echo "${G}Tekan Enter untuk melanjutkan."
-    read
+    echo "${G}pilihan anda telah disimpan"
+    sleep 1
     banner
   done
+  
 }
 
 
@@ -664,6 +679,9 @@ list_folder() {
 
   # Menetapkan subfolder yang dipilih sebagai tujuan baru
   tujuan="$selected_subfolder"
+  
+echo "$tujuan" > "tujuan.txt"
+
   echo "Anda telah memilih subfolder: $selected_subfolder_name"
   # Lakukan tindakan yang diinginkan terhadap subfolder yang dipilih
 
