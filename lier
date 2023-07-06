@@ -12,6 +12,8 @@ N='\e[00;37;40m' # NEUTRAL
 version="1.9.2"
 release_date="4 Juli 2023"
 tampilan="sederhana"
+temp_info="$(dirname "$0")/conf/tempcek.txt"
+modeprop="manual"
 mainfldr=$(dirname "$0")
 today=$(date +"%d-%b-%Y")
 srcfldr=nsstore
@@ -69,12 +71,23 @@ banner
   rm -rf "$sumber" 2>/dev/null
   clear
   banner
+  if [ "$modeprop" == "manual" ]; then
   echo "Apakah Anda akan membuka aplikasi? (Y/n)"
 read -r open_choice
 
 if [[ "$open_choice" == "Y" || "$open_choice" == "y" ]]; then
     am start -n com.lazada.android/com.lazada.activities.EnterActivity
+sleep 3
+am start -n com.lazada.android/com.lazada.android.order_manager.orderlist.LazOrderManagerActivity
+
 fi
+else
+  am start -n com.lazada.android/com.lazada.activities.EnterActivity
+sleep 8
+am start -n com.lazada.android/com.lazada.android.order_manager.orderlist.LazOrderManagerActivity
+
+fi
+  
 
 }
 
@@ -151,6 +164,11 @@ echo "                   app:${R}$app_name"
 else
   echo "${R}s) ${Y}sembunyikan detail"
 fi
+if [ "$modeprop" == "manual" ]; then
+  echo "${R}o) ${Y}isi keterangan otomatis"
+else
+  echo "${R}o) ${Y}isi keterangan manual"
+fi
     echo ""
     echo "${G}Opsi:${W}"
     
@@ -172,6 +190,13 @@ fi
       tampilan="lengkap"
     else
       tampilan="sederhana"
+    fi
+    ;;
+    o)
+    if [ "$modeprop" == "manual" ]; then
+      modeprop="otomatis"
+    else
+      modeprop="manual"
     fi
     ;;
       a)
@@ -215,8 +240,29 @@ fi
       echo "${G}Mengekstrak $selected_file..."
       tar -xf "$selected_file" -C "$fdrout" 2>/dev/null
       restore
+if [ "$modeprop" == "manual" ]; then
+  isimanual
+else
+   sleep 30
+  isioto
+fi
+      
+      echo "${G}Ekstraksi selesai."
+    else
+      echo "${G}Nomor file tidak valid. Tekan Enter untuk melanjutkan."
+      read
+    fi
 
-      properties_file="${selected_file%.tar.gz}.properties"
+    
+
+    echo "${G}pilihan anda telah disimpan"
+    sleep 1
+    banner
+  done
+  
+}
+isimanual(){
+properties_file="${selected_file%.tar.gz}.properties"
       if [ -f "$properties_file" ]; then
         line=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
 
@@ -227,15 +273,9 @@ fi
         fi
       else
         echo "infoco=√" >"$properties_file"
+        
       fi
-
-      echo "${G}Ekstraksi selesai."
-    else
-      echo "${G}Nomor file tidak valid. Tekan Enter untuk melanjutkan."
-      read
-    fi
-
-    properties_file="${selected_file%.tar.gz}.properties"
+properties_file="${selected_file%.tar.gz}.properties"
     if [ -f "$properties_file" ]; then
       keterangan=$(grep -o 'keterangan=.*' "$properties_file" | cut -d'=' -f2-)
       keterangan2=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
@@ -325,15 +365,84 @@ fi
         esac
       fi
     fi
+    }
+isioto(){
+properties_file="${selected_file%.tar.gz}.properties"
+      if [ -f "$properties_file" ]; then
+        line=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
 
-    echo "${G}pilihan anda telah disimpan"
-    sleep 1
-    banner
-  done
+        if [ -n "$line" ]; then
+          sed -i "s/$line/√/g" "$properties_file"
+        else
+          echo "infoco=√" >>"$properties_file"
+        fi
+      else
+        echo "infoco=√" >"$properties_file"
+      fi
+if grep -iq "Dalam pengiriman" "$temp_info"; then
+  statinfo="aman"
+    tokoinfo=$(grep '\[index:55\]' "$temp_info" | cut -d' ' -f2-)
+      kecinfo=$(awk -F' ' '/\[index:46\]/ {print $NF}'  "$temp_info")
+ elif grep -iq "Dikemas" "$temp_info"; then
+  statinfo="aman"
+    tokoinfo=$(grep '\[index:55\]' "$temp_info" | cut -d' ' -f2-)
+      kecinfo=$(awk -F' ' '/\[index:46\]/ {print $NF}'  "$temp_info")
+elif 
+  grep -iq "Dibatalkan" "$temp_info"; then
+  statinfo="cc"
+    tokoinfo=$(grep '\[index:45\]' "$temp_info" | cut -d' ' -f2-)
+      kecinfo=$(awk -F' ' '/\[index:36\]/ {print $NF}'  "$temp_info")
+      elif 
+  grep -iq "Telah diterima" "$temp_info"; then
+  statinfo="aman"
+    tokoinfo=$(grep '\[index:66\]' "$temp_info" | cut -d' ' -f2-)
+      kecinfo=$(awk -F' ' '/\[index:46\]/ {print $NF}'  "$temp_info")
+  else
   
-}
+  
+      statinfo=""
+    tokoinfo="nihil"
+      kecinfo="nihil"
+fi
+    properties_file="${selected_file%.tar.gz}.properties"
+    if [ -f "$properties_file" ]; then
+      keterangan=$(grep -o 'keterangan=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan2=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan3=$(grep -o 'infoakun=.*' "$properties_file" | cut -d'=' -f2-)
+      keterangan4=$(grep -o 'kecamatan=.*' "$properties_file" | cut -d'=' -f2-)
 
+      if [ -z "$keterangan" ]; then
+        clear
+        banner
+        echo "Info 'toko' adalah $tokoinfo."
+        
 
+        sed -i '/keterangan=/d' "$properties_file"
+          echo "keterangan=$tokoinfo" >>"$properties_file"
+      fi
+
+      if [ -z "$keterangan4" ]; then
+        clear
+        banner
+        echo "Info 'kecamatan' adalah $kecinfo"
+        sed -i '/kecamatan=/d' "$properties_file"
+        echo "kecamatan=$kecinfo" >>"$properties_file"
+      fi
+
+      if grep -q 'infoakun=' "$properties_file"; then
+        sed -i '/infoakun=/d' "$properties_file"
+        echo "infoakun=$statinfo" >> "$properties_file"
+        echo "infoakun=$statinfo"
+        
+      else
+        clear
+        banner
+        sed -i '/infoakun=/d' "$properties_file"
+        echo "infoakun=$statinfo" >> "$properties_file"
+        echo "infoakun=$statinfo"
+      fi
+    fi
+    }    
 
 
 menu() {
