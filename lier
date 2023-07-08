@@ -9,7 +9,7 @@ Bl='\e[01;30m'   # BLACK
 C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # NEUTRAL
-version="1.9.4"
+version="1.9.5"
 release_date="4 Juli 2023"
 tampilan="sederhana"
 temp_info="$(dirname "$0")/conf/tempcek.txt"
@@ -389,7 +389,7 @@ if grep -iq "Dalam pengiriman" "$temp_info"; then
     tokoinfo=$(grep '\[index:54\]' "$temp_info" | cut -d' ' -f2-)
       kecinfo=$(awk -F' ' '/\[index:45\]/ {print $NF}'  "$temp_info")
  elif grep -iq "Dikemas" "$temp_info"; then
-  statinfo="aman"
+  statinfo="dikemas"
     tokoinfo=$(grep '\[index:55\]' "$temp_info" | cut -d' ' -f2-)
       kecinfo=$(awk -F' ' '/\[index:46\]/ {print $NF}'  "$temp_info")
 elif grep -iq "Dibatalkan" "$temp_info"; then
