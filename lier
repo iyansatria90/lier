@@ -9,8 +9,8 @@ Bl='\e[01;30m'   # BLACK
 C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # NEUTRAL
-version="1.9.5"
-release_date="4 Juli 2023"
+version="1.9.6"
+release_date="17 Oktober 2023"
 tampilan="sederhana"
 temp_info="$(dirname "$0")/conf/tempcek.txt"
 modeprop="manual"
@@ -107,6 +107,7 @@ fdrsrc="$tujuan/"
     echo "${G}Isi folder:"
     underline_text "no. | jam | status | informasi"
     files=("$tujuan"/*.tar.gz)
+    
     for i in "${!files[@]}"; do
       properties_file="${files[$i]%.tar.gz}.properties"
       if [ -f "$properties_file" ]; then
@@ -114,11 +115,11 @@ fdrsrc="$tujuan/"
         keterangan2=$(grep -o 'infoco=.*' "$properties_file" | cut -d'=' -f2-)
         keterangan3=$(grep -o 'infoakun=.*' "$properties_file" | cut -d'=' -f2-)
         keterangan4=$(grep -o 'kecamatan=.*' "$properties_file" | cut -d'=' -f2-)
-        keterangan5=$(grep -o 'keterangan_ext=.*' "$properties_file" | cut -d'=' -f2-)
-        keterangan6=$(grep -o 'kecamatan_ext=.*' "$properties_file" | cut -d'=' -f2-)
-        keterangan7=$(grep -o 'infoakun_ext=.*' "$properties_file" | cut -d'=' -f2-)
-        keterangan8=$(grep -o 'sys_ro.product.model=.*' "$properties_file" | cut -d'=' -f2-)
-        keterangan9=$(grep -o 'sys_ro.build.description=.*' "$properties_file" | cut -d'=' -f2-)
+     #   keterangan5=$(grep -o 'keterangan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+      #  keterangan6=$(grep -o 'kecamatan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+      #  keterangan7=$(grep -o 'infoakun_ext=.*' "$properties_file" | cut -d'=' -f2-)
+      #  keterangan8=$(grep -o 'sys_ro.product.model=.*' "$properties_file" | cut -d'=' -f2-)
+       # keterangan9=$(grep -o 'sys_ro.build.description=.*' "$properties_file" | cut -d'=' -f2-)
         waktu=$(grep -oE '[0-9]{2}:[0-9]{2}' "$properties_file" | awk '{print $1}')
 
         case $keterangan3 in
@@ -137,10 +138,16 @@ fdrsrc="$tujuan/"
 
       filetarget=$(basename "$findtarget" .tar.gz)
     app_name=$(echo "$filetarget" | cut -d'-' -f1)
-
-    if [ "$tampilan" == "sederhana" ]; then
+if [ "$tampilan" == "sederhana" ]; then
+    
   echo "${G}$i. | ${C}$waktu ${G}| $status |${Y}$keterangan ~ ${Y}$keterangan4 ${G} $keterangan2"
+  
 else
+  keterangan5=$(grep -o 'keterangan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan6=$(grep -o 'kecamatan_ext=.*' "$properties_file" | cut -d'=' -f2-)
+       keterangan7=$(grep -o 'infoakun_ext=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan8=$(grep -o 'sys_ro.product.model=.*' "$properties_file" | cut -d'=' -f2-)
+        keterangan9=$(grep -o 'sys_ro.build.description=.*' "$properties_file" | cut -d'=' -f2-)
   echo "${G}$i. | ${C}$waktu ${G}| ${G}$keterangan ~ ${G}$keterangan4 "
   
   echo "    ${G}-${Y}Restore: ${R}$keterangan2"
@@ -636,7 +643,7 @@ reset_keterangan() {
 
     echo "${G}$i. | ${R}$keterangan3${G} | ${Y}$keterangan ${G}- ${Y}$keterangan4  ${R}$keterangan2 "
   done
-  echo "${G}Pilih nomor file yang akan direset keterangannya \n(q untuk keluar,  ${Y}'a'  ${G}untuk reset semua):"
+  echo "${G}Pilih nomor file yang akan direset keterangannya \n(q untuk keluar,  ${Y}'a'  ${G}untuk reset semua 'm' untuk status sudah d restore):"
   read selected_number
 
   if [ "$selected_number" == "q" ]; then
@@ -651,15 +658,25 @@ reset_keterangan() {
       sed -i '/keterangan_ext=/d' "$tujuan/$file"
       sed -i '/kecamatan_ext=/d' "$tujuan/$file"
     done
+    
     echo "Reset semua file selesai."
     echo "${G}Tekan Enter untuk melanjutkan."
     read
     banner
     extract
   fi
-
+if [ "$selected_number" == "m" ]; then
+    for file in "${files[@]}"; do
+      sed -i '/infoco=/d' "$tujuan/$file"
+    done
+echo "Reset tanda file selesai."
+    echo "${G}Tekan Enter untuk melanjutkan."
+    read
+    banner
+    extract
+  fi
   if ! echo "$selected_number" | grep -qE '^[0-9]+$'; then
-    echo "Pilihan harus berupa angka atau 'a'. Silakan coba lagi."
+    echo "Pilihan harus berupa angka atau 'a' atay 'm'. Silakan coba lagi."
     reset_keterangan
   fi
 
